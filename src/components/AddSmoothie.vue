@@ -31,6 +31,9 @@
 </template>
 
 <script>
+import db from "@/components/firebase/init";
+import slugify from "slugify";
+
 export default {
   name: "AddSmoothie",
   data() {
@@ -38,12 +41,36 @@ export default {
       title: null,
       another: null,
       ingredients: [],
-      feedback: null
+      feedback: null,
+      slug: null
     };
   },
   methods: {
     AddSmoothie() {
-      console.log(this.title, this.ingredients);
+      if (this.title) {
+        this.feedback = null;
+        // create slug
+        this.slug = slugify(this.title, {
+          replacement: "-",
+          remove: /[$*__+~.()'"!\-:@]/g,
+          lower: true
+        });
+        db.collection("smoothies")
+          .add({
+            title: this.title,
+            ingredients: this.ingredients,
+            slug: this.slug
+          })
+          .then(() => {
+            this.$router.push({ name: "Index" });
+          })
+          .catch(err => {
+            console.log(err);
+            this.feedback = err;
+          });
+      } else {
+        this.feedback = "You must enter a smoothie title";
+      }
     },
     addIngredient() {
       if (this.another) {
